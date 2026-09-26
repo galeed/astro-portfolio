@@ -10,9 +10,9 @@ const isGitHubPages = Boolean(process.env.GITHUB_ACTIONS) && !isNetlify;
 // https://astro.build/config
 export default defineConfig({
   site: isNetlify
-    ? (process.env.URL || "https://astro-tui-portfolio.netlify.app")
-    : "https://nivinvysakh.github.io",
-  base: isGitHubPages ? "/astro-tui-portfolio/" : "/",
+    ? process.env.URL || "https://astro-tui-portfolio.netlify.app"
+    : "https://galeed.github.io/astro-portfolio",
+  base: isGitHubPages ? "/astro-portfolio/" : "/",
   devToolbar: {
     enabled: false,
   },
@@ -21,7 +21,6 @@ export default defineConfig({
     port: 4321,
   },
   vite: {
-    // @ts-ignore
     plugins: [tailwindcss()],
     server: {
       allowedHosts: ["tui-portfolio-dev.tuiportfolio.orb.local", ".orb.local"],
