@@ -64,7 +64,6 @@ export const PORTFOLIO_DATA = {
   \\____|\\__,_|\\___|\\___|\\__,_|
 `,
 
-
     specs: {
       OS: "Arch Linux x86_64 / macOS Darwin",
       Kernel: "6.10.8-zen1-1-zen",
