@@ -56,18 +56,14 @@ export const PORTFOLIO_DATA = {
     bio: "Passionate systems & web engineer with 7+ years of experience building high-throughput edge systems, interactive web applications, and developer tools. Active open-source contributor and collaborative team player.",
     quote:
       '"Code is like humor. When you have to explain it, it’s bad." – Cory House',
-    asciiBanner: `
-    _    _     _______  __
-   / \\  | |   | ____\\ \\/ /
-  / _ \\ | |   |  _|  \\  / 
- / ___ \\| |___| |___ /  \\ 
-/_/   \\_\\_____|_____/_/\\_\\
-  ____  _______   ______   ___  _   _ 
- |  _ \\| ____\\ \\ / / ___| / _ \\| \\ | |
- | | | |  _|  \\ V /\\___ \\| | | |  \\| |
- | |_| | |___  | |  ___) | |_| | |\\  |
- |____/|_____| |_| |____/ \\___/|_| \\_|
+asciiBanner: `
+   ____     _                    _ 
+  / ___| __| | ___  ___  __| |
+ | |  _ / _\` |/ _ \\/ _ \\/ _\` |
+ | |_| | (_| |  __/  __/ (_| |
+  \\____|\\__,_|\\___|\\___|\\__,_|
 `,
+
     specs: {
       OS: "Arch Linux x86_64 / macOS Darwin",
       Kernel: "6.10.8-zen1-1-zen",
