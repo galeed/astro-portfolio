@@ -12,13 +12,29 @@ export interface GameActivity {
 
 export interface GamesConfig {
   enabled: boolean;
-  lanyardUserId?: string; // Optional Discord User ID for Lanyard live Game Activity RPC
+  lanyardUserId?: string;
 }
 
-/**
- * 🎮 LIVE GAME ACTIVITY CONFIGURATION
- * Stream live gaming activity from your Discord presence via Lanyard API!
- */
+interface DiscordActivity {
+  type?: number;
+  name?: string;
+  details?: string;
+  state?: string;
+  timestamps?: { start?: number };
+  assets?: { large_image?: string; small_image?: string };
+  application_id?: string;
+  icon?: string;
+}
+
+interface LanyardResponse {
+  success?: boolean;
+  data?: { activities?: DiscordActivity[] };
+}
+
+interface RawgResponse {
+  results?: Array<{ background_image?: string | null }>;
+}
+
 export const GAMES_CONFIG: GamesConfig = {
   enabled: false,
   lanyardUserId: "your_discord_id",
@@ -26,9 +42,6 @@ export const GAMES_CONFIG: GamesConfig = {
 
 const gameIconCache: Record<string, string> = {};
 
-/**
- * Dynamically fetch high-resolution game icons from RAWG API
- */
 export async function fetchGameIconByName(gameName: string): Promise<string> {
   if (!gameName) return "";
   const key = gameName.toLowerCase().trim();
@@ -36,49 +49,37 @@ export async function fetchGameIconByName(gameName: string): Promise<string> {
 
   try {
     const res = await fetch(`https://api.rawg.io/api/games?search=${encodeURIComponent(gameName)}&key=c5425b741b0b4317a7885b0d02ae7e74&page_size=1`);
-    const data = await res.json();
-    if (data.results && data.results.length > 0) {
-      const img = data.results[0].background_image;
-      if (img) {
-        gameIconCache[key] = img;
-        return img;
-      }
+    const data = (await res.json()) as RawgResponse;
+    const image = data.results?.[0]?.background_image;
+    if (image) {
+      gameIconCache[key] = image;
+      return image;
     }
-  } catch { }
+  } catch {
+    // Network errors are handled by returning an empty icon.
+  }
 
   return "";
 }
 
-/**
- * Robust asset parser for Discord Game Rich Presence icons
- */
-export function parseGameAsset(game: any): string {
+export function parseGameAsset(game: DiscordActivity | null | undefined): string {
   if (!game) return "";
 
-  // 1. Check assets.large_image or small_image
   const asset = game.assets?.large_image || game.assets?.small_image;
   if (asset) {
-    if (asset.startsWith("spotify:")) {
-      return `https://i.scdn.co/image/${asset.replace("spotify:", "")}`;
-    }
-    if (asset.startsWith("mp:external/")) {
-      return `https://media.discordapp.net/external/${asset.replace("mp:external/", "")}`;
-    }
+    if (asset.startsWith("spotify:")) return `https://i.scdn.co/image/${asset.replace("spotify:", "")}`;
+    if (asset.startsWith("mp:external/")) return `https://media.discordapp.net/external/${asset.replace("mp:external/", "")}`;
     if (asset.startsWith("external/")) {
       const match = asset.match(/https?\/.*/);
       if (match) return `https://${match[0].replace(/^https?\//, "")}`;
     }
-    if (game.application_id) {
-      return `https://cdn.discordapp.com/app-assets/${game.application_id}/${asset}.png`;
-    }
+    if (game.application_id) return `https://cdn.discordapp.com/app-assets/${game.application_id}/${asset}.png`;
   }
 
-  // 2. Check application_id icon
   if (game.icon && game.application_id) {
     return `https://cdn.discordapp.com/app-icons/${game.application_id}/${game.icon}.png`;
   }
 
-  // 3. Popular games fallback icon map (Roblox, Minecraft, Valorant, GTA V, etc.)
   const knownGameIcons: Record<string, string> = {
     roblox: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmHAHSmS08T6uotljZiAy9SkzIqJG7DSxecb7BSMhJGw&s=10",
     minecraft: "https://upload.wikimedia.org/wikipedia/en/5/51/Minecraft_cover_art.png",
@@ -94,52 +95,34 @@ export function parseGameAsset(game: any): string {
   };
 
   const nameLower = (game.name || "").toLowerCase().trim();
-  for (const [key, iconUrl] of Object.entries(knownGameIcons)) {
-    if (nameLower.includes(key)) {
-      return iconUrl;
-    }
-  }
-
-  return "";
+  return Object.entries(knownGameIcons).find(([key]) => nameLower.includes(key))?.[1] || "";
 }
 
-/**
- * Helper to fetch live Game activity from Lanyard API
- */
 export async function getLiveGameActivity(): Promise<GameActivity | null> {
-  if (GAMES_CONFIG.lanyardUserId) {
-    try {
-      const res = await fetch(`https://api.lanyard.rest/v1/users/${GAMES_CONFIG.lanyardUserId}`);
-      const data = await res.json();
-      if (data.success && data.data?.activities) {
-        const game = data.data.activities.find(
-          (a: any) => a.type === 0 && a.name.toLowerCase() !== "spotify"
-        );
+  if (!GAMES_CONFIG.lanyardUserId) return null;
 
-        if (game) {
-          const now = Date.now();
-          const start = game.timestamps?.start || now;
-          let largeImg = parseGameAsset(game);
+  try {
+    const res = await fetch(`https://api.lanyard.rest/v1/users/${GAMES_CONFIG.lanyardUserId}`);
+    const data = (await res.json()) as LanyardResponse;
+    const game = data.data?.activities?.find(
+      (activity) => activity.type === 0 && activity.name?.toLowerCase() !== "spotify",
+    );
+    if (!data.success || !game?.name) return null;
 
-          if (!largeImg) {
-            largeImg = await fetchGameIconByName(game.name);
-          }
+    const now = Date.now();
+    const start = game.timestamps?.start || now;
+    const largeImage = await fetchGameIconByName(game.name).then((fallback) => parseGameAsset(game) || fallback);
 
-          return {
-            isPlaying: true,
-            gameName: game.name,
-            details: game.details || "In Game",
-            state: game.state || "",
-            largeImage: largeImg,
-            startTimestamp: start,
-            elapsedMs: Math.max(0, now - start),
-          };
-        }
-      }
-    } catch {
-      // Network error fallback
-    }
+    return {
+      isPlaying: true,
+      gameName: game.name,
+      details: game.details || "In Game",
+      state: game.state || "",
+      largeImage,
+      startTimestamp: start,
+      elapsedMs: Math.max(0, now - start),
+    };
+  } catch {
+    return null;
   }
-
-  return null;
 }
