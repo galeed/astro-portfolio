@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Share+Tech+Mono&display=swap');
 @import "tailwindcss";
+@config "../../tailwind.config.js";
 
 :root {
   /* Default Theme: Phosphor Green */
@@ -163,29 +164,12 @@ body {
 }
 
 @keyframes crtFlicker {
-  0% {
-    opacity: 0.995;
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  52% {
-    opacity: 0.96;
-  }
-
-  54% {
-    opacity: 1;
-  }
-
-  80% {
-    opacity: 0.99;
-  }
-
-  100% {
-    opacity: 1;
-  }
+  0% { opacity: 0.995; }
+  50% { opacity: 1; }
+  52% { opacity: 0.96; }
+  54% { opacity: 1; }
+  80% { opacity: 0.99; }
+  100% { opacity: 1; }
 }
 
 .crt-flicker {
