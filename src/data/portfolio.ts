@@ -32,15 +32,15 @@ export type Max8Colors =
 
 export const PORTFOLIO_DATA = {
   developer: {
-    name: "Alex Devson",
-    handle: "alexdevson",
-    title: "Senior Full Stack & Systems Engineer",
+    name: "Galeed León",
+    handle: "galeedx",
+    title: "Geek",
     alias: "root@quantum-box",
-    email: "alexdevson@dev.com",
-    github: "https://github.com/nivinvysakh/astro-tui-portfolio",
+    email: "galeedx@gmail.com",
+    github: "https://github.com/galeed/astro-portfolio",
     linkedin: "https://linkedin.com",
     twitter: "https://x.com",
-    location: "San Francisco, CA // UTC-7",
+    location: "CDMX - México",
     status: " OPEN FOR COLLABORATIONS & CONTRACTS",
     CLI_EMOJI: "🫐",
     palette: [
